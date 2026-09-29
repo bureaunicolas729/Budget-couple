@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Budget de Nicolas & MS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#17202a;--muted:#6b7280;--line:#e5e7eb;--primary:#3157d5;--soft:#eef2ff;--danger:#b42318;--green:#087443}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1100px;margin:auto;padding:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #00000008}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.top h1{margin:0 0 4px;font-size:28px}.muted{color:var(--muted);font-size:13px}.login{max-width:430px;margin:12vh auto}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:15px;border:1px solid var(--line);border-radius:14px;background:#fff}.stat span{font-size:13px;color:var(--muted)}.stat b{display:block;font-size:22px;margin-top:5px}.months{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}.monthBtn{white-space:nowrap;background:#fff;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:9px 14px}.monthBtn.active{background:var(--primary);color:#fff;border-color:var(--primary)}.addMonth{background:var(--soft);color:var(--primary)}.formgrid{display:grid;grid-template-columns:1.4fr 1fr .8fr auto;gap:9px;align-items:end}label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}input,select,button{font:inherit}input,select{width:100%;padding:10px 11px;border:1px solid #cfd5df;border-radius:10px;background:#fff}button{padding:10px 13px;border:0;border-radius:10px;background:var(--primary);color:#fff;cursor:pointer}.secondary{background:#eef1f5;color:var(--text)}.danger{background:#fff0ef;color:var(--danger);border:1px solid #f2c7c3}.small{padding:7px 9px;font-size:13px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}th{font-size:12px;color:var(--muted);font-weight:600}.amount{text-align:right;white-space:nowrap}.actions{white-space:nowrap}.pill{display:inline-block;background:#f1f5f9;border-radius:999px;padding:4px 8px;font-size:12px}.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px}.breakrow{display:flex;justify-content:space-between;gap:10px;padding:11px;border:1px solid var(--line);border-radius:12px}.bar{height:8px;background:#edf0f4;border-radius:99px;overflow:hidden;margin-top:7px}.bar>i{display:block;height:100%;background:var(--primary)}.pieWrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap}.pie{width:210px;height:210px;border-radius:50%;background:conic-gradient(#3157d5 0deg 90deg,#36a269 90deg 180deg,#f59e0b 180deg 250deg,#8b5cf6 250deg 310deg,#cbd5e1 310deg 360deg);position:relative}.pie:after{content:"";position:absolute;inset:55px;background:#fff;border-radius:50%}.legend{display:grid;gap:7px}.legend div{display:flex;gap:8px;align-items:center}.dot{width:10px;height:10px;border-radius:50%;display:inline-block}.details summary{cursor:pointer;font-weight:650}.personGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.person{border:1px solid var(--line);border-radius:14px;padding:14px}.person h3{margin:0 0 10px}.personLine{display:flex;justify-content:space-between;padding:6px 0}.totalLine{border-top:1px solid var(--line);margin-top:6px;padding-top:9px;font-weight:700}.empty{padding:18px;text-align:center;color:var(--muted)}.msg{min-height:18px}.editInput{min-width:160px}.hidden{display:none}@media(max-width:760px){.wrap{padding:12px}.grid{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr 1fr}.formgrid button{grid-column:1/-1}.breakdown,.personGrid{grid-template-columns:1fr}.pie{width:180px;height:180px}.pie:after{inset:48px}.top{align-items:flex-start}.top h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div id="login" class="login card">
+  <h1>Budget de Nicolas & MS</h1><p class="muted">Budget partagé</p>
+  <form id="loginForm"><label>E-mail</label><input id="email" type="email" required autocomplete="email"><label style="margin-top:10px">Mot de passe</label><input id="password" type="password" required autocomplete="current-password" style="margin-bottom:12px"><button type="submit">Se connecter</button></form><p id="loginMsg" class="msg"></p>
+</div>
+
+<div id="app" class="wrap hidden">
+<header class="top"><div><h1>Budget de Nicolas & MS</h1><div id="monthLabel" class="muted"></div></div><div><span id="userName"></span> <button id="logout" class="secondary small">Déconnexion</button></div></header>
+
+<div class="card"><div class="months" id="months"></div></div>
+
+<section class="grid">
+ <div class="stat"><span>Revenus de base</span><b id="base">0 €</b></div>
+ <div class="stat"><span>Revenus aléatoires</span><b id="random">0 €</b></div>
+ <div class="stat"><span>Total utilisé</span><b id="used">0 €</b></div>
+ <div class="stat"><span>Reste</span><b id="remain">0 €</b></div>
+</section>
+
+<div class="card"><h2>Ajouter une opération</h2>
+<form id="form" class="formgrid">
+ <div><label>Libellé</label><input id="name" required placeholder="Ex. Courses, loyer, salaire…"></div>
+ <div><label>Catégorie</label><select id="cat">
+  <option value="salary1">Paie Nicolas</option><option value="salary2">Paie MS</option><option value="aid">Aides / CAF</option><option value="random_income">Revenus aléatoires</option>
+  <option value="fixed">Dépenses fixes</option><option value="variable">Dépenses de la vie quotidienne</option><option value="pleasure">Dépenses plaisir</option><option value="savings">Épargne</option>
+ </select></div>
+ <div><label>Montant (€)</label><input id="amount" type="number" min="0" step="0.01" required></div><button type="submit">Ajouter</button>
+</form><p id="formMsg" class="msg"></p><p class="muted">Les paies + aides/CAF forment le revenu de base. Les revenus aléatoires sont séparés.</p></div>
+
+<div class="card"><h2>Opérations du mois</h2><div class="tablewrap"><table><thead><tr><th>Libellé</th><th>Catégorie</th><th>Montant</th><th>Ajouté par</th><th>Modifié par</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+
+<div class="card"><h2>Répartition du budget</h2><div class="pieWrap"><div id="pie" class="pie" aria-label="Camembert de répartition"></div><div id="legend" class="legend"></div></div><p class="muted">Répartition calculée sur les revenus de base. Le reste correspond au revenu de base non utilisé.</p></div>
+
+<details class="card details"><summary>👥 Dépenses par personne</summary><div id="people" class="personGrid"></div></details>
+</div>
+
+<script>
+const SUPABASE_URL="https://gkyyklffhdsgcfjllrkq.supabase.co";
+const SUPABASE_KEY="sb_publishable_VRGNAbK7jyKy7NcmrifEQA_TMBxeLh1";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+const eur=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const labels={salary1:'Paie Nicolas',salary2:'Paie MS',aid:'Aides / CAF',random_income:'Revenus aléatoires',fixed:'Dépenses fixes',variable:'Dépenses de la vie quotidienne',pleasure:'Dépenses plaisir',savings:'Épargne'};
+const incomeCats=new Set(['salary1','salary2','aid','random_income']);
+let householdId=null,currentMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),items=[],names={},months=[],channel=null;
+const monthKey=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0');return `${y}-${m}-01`};
+const parseMonth=s=>{const [y,m]=s.slice(0,7).split('-').map(Number);return new Date(y,m-1,1)};
+const fmtMonth=d=>new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'}).format(d).replace(/^./,x=>x.toUpperCase());
+
+async function init(){
+ const u=(await db.auth.getUser()).data.user;if(!u) return;
+ const {data:m,error}=await db.from('household_members').select('household_id,display_name').eq('user_id',u.id);
+ if(error||!m?.length) throw new Error('Compte non rattaché au budget couple.');
+ householdId=m[0].household_id;$('userName').textContent=m[0].display_name||'Utilisateur';
+ const {data:ms,error:me}=await db.from('household_members').select('user_id,display_name').eq('household_id',householdId);
+ if(me) throw me; names=Object.fromEntries((ms||[]).map(x=>[x.user_id,x.display_name||'Utilisateur']));
+ await loadMonths();await load();
+ if(channel) await db.removeChannel(channel);
+ channel=db.channel('budget-live-'+householdId).on('postgres_changes',{event:'*',schema:'public',table:'budget_items',filter:`household_id=eq.${householdId}`},async()=>{await loadMonths();await load()}).subscribe();
+}
+async function loadMonths(){
+ const {data,error}=await db.from('budget_items').select('month').eq('household_id',householdId);
+ if(error) throw error;
+ const set=new Set([monthKey(currentMonth),...(data||[]).map(x=>String(x.month).slice(0,10))]);
+ months=[...set].map(parseMonth).sort((a,b)=>a-b);renderMonths();
+}
+function renderMonths(){
+ $('months').innerHTML=months.map(d=>`<button class="monthBtn ${monthKey(d)===monthKey(currentMonth)?'active':''}" data-month="${monthKey(d)}">${fmtMonth(d)}</button>`).join('')+`<button class="monthBtn addMonth" id="addMonth">＋ Ajouter un mois</button>`;
+ document.querySelectorAll('.monthBtn[data-month]').forEach(b=>b.onclick=()=>{currentMonth=parseMonth(b.dataset.month);load()});
+ $('addMonth').onclick=()=>{const v=prompt('Mois à ajouter (format AAAA-MM, par exemple 2026-10)');if(!v)return;if(!/^\\d{4}-(0[1-9]|1[0-2])$/.test(v)){alert('Format attendu : AAAA-MM');return}currentMonth=parseMonth(v+'-01');if(!months.some(d=>monthKey(d)===monthKey(currentMonth))){months.push(currentMonth);months.sort((a,b)=>a-b)}renderMonths();load()};
+}
+async function load(){
+ $('monthLabel').textContent=fmtMonth(currentMonth);
+ const {data,error}=await db.from('budget_items').select('*').eq('household_id',householdId).eq('month',monthKey(currentMonth)).order('created_at');
+ if(error){$('formMsg').textContent=error.message;return}items=data||[];render();
+}
+function totals(){const sum=(cat,type)=>items.filter(x=>x.category===cat&&x.type===type).reduce((s,x)=>s+Number(x.amount||0),0);const base=sum('salary1','income')+sum('salary2','income')+sum('aid','income');const random=sum('random_income','income');const fixed=sum('fixed','expense'),variable=sum('variable','expense'),pleasure=sum('pleasure','expense'),savings=sum('savings','expense');const used=fixed+variable+pleasure+savings;return {base,random,fixed,variable,pleasure,savings,used,remain:base-used}}
+function render(){
+ const t=totals();$('base').textContent=eur(t.base);$('random').textContent=eur(t.random);$('used').textContent=eur(t.used);$('remain').textContent=eur(t.remain);
+ $('rows').innerHTML=items.length?items.map(x=>rowHtml(x)).join(''):`<tr><td colspan="6" class="empty">Aucune opération pour ${esc(fmtMonth(currentMonth))}.</td></tr>`;
+ const parts=[['Dépenses fixes',t.fixed],['Vie quotidienne',t.variable],['Dépenses plaisir',t.pleasure],['Épargne',t.savings],['Reste disponible',Math.max(0,t.remain)]];
+ renderPie(parts,t.base);renderPeople();
+}
+function rowHtml(x){return `<tr data-id="${esc(x.id)}"><td><span class="viewName">${esc(x.name||x.label||'')}</span><input class="editInput editName hidden" value="${esc(x.name||x.label||'')}"></td><td><span class="viewCat">${esc(labels[x.category]||x.category)}</span><select class="editCat hidden">${Object.entries(labels).map(([k,v])=>`<option value="${k}" ${k===x.category?'selected':''}>${esc(v)}</option>`).join('')}</select></td><td class="amount"><span class="viewAmount">${eur(x.amount)}</span><input class="editInput editAmount hidden" type="number" min="0" step="0.01" value="${Number(x.amount)||0}"></td><td>${esc(names[x.created_by]||'Utilisateur')}</td><td>${x.updated_by?esc(names[x.updated_by]||'Utilisateur'):'—'}</td><td class="actions"><button class="small editBtn" onclick="startEdit('${x.id}')">Modifier</button> <button class="small secondary saveBtn hidden" onclick="saveEdit('${x.id}')">Enregistrer</button> <button class="small secondary cancelBtn hidden" onclick="cancelEdit('${x.id}')">Annuler</button> <button class="small danger" onclick="delItem('${x.id}')">Supprimer</button></td></tr>`}
+function setEditMode(id,on){const r=document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);if(!r)return;r.querySelectorAll('.viewName,.viewCat,.viewAmount,.editBtn').forEach(e=>e.classList.toggle('hidden',on));r.querySelectorAll('.editName,.editCat,.editAmount,.saveBtn,.cancelBtn').forEach(e=>e.classList.toggle('hidden',!on))}
+window.startEdit=id=>setEditMode(id,true);
+window.cancelEdit=id=>setEditMode(id,false);
+window.saveEdit=async id=>{const r=document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);const u=(await db.auth.getUser()).data.user;const category=r.querySelector('.editCat').value;const type=incomeCats.has(category)?'income':'expense';const name=r.querySelector('.editName').value.trim();const amount=Number(r.querySelector('.editAmount').value);if(!name||amount<0){alert('Vérifie le libellé et le montant.');return}const {error}=await db.from('budget_items').update({name,label:name,category,type,amount,updated_by:u.id,updated_at:new Date().toISOString()}).eq('id',id).eq('household_id',householdId);if(error)alert(error.message);else await load()};
+window.delItem=async id=>{if(!confirm('Supprimer cette opération ?'))return;const {error}=await db.from('budget_items').delete().eq('id',id).eq('household_id',householdId);if(error)alert(error.message);else await load()};
+function renderPie(parts,total){
+ const positive=parts.map(p=>Math.max(0,p[1]));const sum=positive.reduce((a,b)=>a+b,0)||1;let deg=0;const colors=['#3157d5','#36a269','#f59e0b','#8b5cf6','#cbd5e1'];const stops=[];parts.forEach((p,i)=>{const end=deg+(positive[i]/sum)*360;stops.push(`${colors[i]} ${deg}deg ${end}deg`);deg=end});$('pie').style.background=`conic-gradient(${stops.join(',')})`;$('legend').innerHTML=parts.map((p,i)=>`<div><span class="dot" style="background:${colors[i]}"></span><span>${esc(p[0])}</span><b style="margin-left:auto">${eur(p[1])} · ${total?((p[1]/total)*100).toFixed(1):0}%</b></div>`).join('');
+}
+function renderPeople(){const people=Object.entries(names);const rows=people.map(([uid,n])=>{const life=items.filter(x=>x.created_by===uid&&x.category==='variable').reduce((s,x)=>s+Number(x.amount||0),0);const pleasure=items.filter(x=>x.created_by===uid&&x.category==='pleasure').reduce((s,x)=>s+Number(x.amount||0),0);return {n,life,pleasure,total:life+pleasure}});$('people').innerHTML=rows.length?rows.map(p=>`<div class="person"><h3>${esc(p.n)}</h3><div class="personLine"><span>Vie quotidienne</span><b>${eur(p.life)}</b></div><div class="personLine"><span>Dépenses plaisir</span><b>${eur(p.pleasure)}</b></div><div class="personLine totalLine"><span>Total des deux</span><b>${eur(p.total)}</b></div></div>`).join(''):'<div class="empty">Aucun membre trouvé.</div>';}
+$('form').onsubmit=async e=>{e.preventDefault();const u=(await db.auth.getUser()).data.user;const c=$('cat').value;const name=$('name').value.trim(),amount=Number($('amount').value);if(!name||amount<0)return;const {error}=await db.from('budget_items').insert({household_id:householdId,month:monthKey(currentMonth),label:name,name,category:c,type:incomeCats.has(c)?'income':'expense',amount,created_by:u.id});if(error){$('formMsg').textContent=error.message;return}$('formMsg').textContent='';e.target.reset();await loadMonths();await load()};
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Connexion…';const {error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)$('loginMsg').textContent=error.message};
+$('logout').onclick=async()=>{if(channel)await db.removeChannel(channel);await db.auth.signOut()};
+db.auth.onAuthStateChange(async(_e,s)=>{if(s){try{await init();$('login').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('loginMsg').textContent=e.message}}else{$('app').classList.add('hidden');$('login').classList.remove('hidden')}});
+</script>
+</body></html>
